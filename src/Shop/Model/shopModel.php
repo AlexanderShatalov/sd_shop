@@ -44,12 +44,6 @@ class ShopModel extends AbstractTableGateway
      */
     public function updateById($input_id, array $data)
     {
-        foreach ($data as $k => $v) {
-            if (gettype($v) == 'string') {
-                $data[$k] = $this->escape($v);
-            }
-        }
-
         if (is_array($this->id)) {
             $request_params = array();
             foreach ($this->id as $k => $v) {
@@ -83,6 +77,23 @@ class ShopModel extends AbstractTableGateway
         $sql = $this->getSql();
         $update = $sql->update();
         $where_args = array();
+
+        if (is_array($values)) {
+            foreach ($values as $k => $v) {
+                if (is_string($v)) {
+                    $values[$k] = $this->escape($v);
+                }
+            }
+        }
+
+        if (is_array($data)) {
+            foreach ($data as $k => $v) {
+                if (is_string($v)) {
+                    $data[$k] = $this->escape($v);
+                }
+            }
+        }
+
         if (is_array($fields)) {
             $bool_flag = ($data == 'AND' || $data == 'OR') ? $data : 'AND';
             $data = $values;
