@@ -1,7 +1,6 @@
 <?php
 namespace Shop\Model;
 
-use Zend\Db\Sql;
 use Zend\Db\TableGateway\AbstractTableGateway;
 use Zend\Db\Adapter\Adapter;
 
@@ -13,6 +12,7 @@ class ShopModel extends AbstractTableGateway
     {
         $this->adapter = $adapter;
         $this->initialize();
+
     }
 
 
@@ -44,6 +44,12 @@ class ShopModel extends AbstractTableGateway
      */
     public function updateById($input_id, array $data)
     {
+        foreach ($data as $k => $v) {
+            if (gettype($v) == 'string') {
+                $data[$k] = $this->escape($v);
+            }
+        }
+
         if (is_array($this->id)) {
             $request_params = array();
             foreach ($this->id as $k => $v) {
@@ -53,6 +59,7 @@ class ShopModel extends AbstractTableGateway
                     $request_params[$v] = $input_id;
                 }
             }
+
             return $this->updateByField($request_params, $data);
         } else if (is_string($this->id)) {
             return $this->updateByField($this->id, $input_id, $data);
@@ -96,11 +103,22 @@ class ShopModel extends AbstractTableGateway
      *
      * @param string $field
      * @param bool $normalize
+     * @param string $sort_flag
+     *
      * @return array
      */
-    public function getAll($field = '', $normalize = false)
+    public function getAll($field = '', $normalize = false, $sort_flag = '')
     {
-        $result = $this->select()->toArray();
+        $sql = $this->getSql();
+        $select = $sql->select();
+
+        //Если задан вариант сортировки
+        if ( $sort_flag == 'ASC' ||$sort_flag == 'DESC' ) {
+            $select->order('sort '.$sort_flag);
+        }
+
+        $result = $this->executeSelect($select)->toArray();
+
         $tmp_item = $result[0];
         $keys_list = array_keys($tmp_item);
 
@@ -111,6 +129,7 @@ class ShopModel extends AbstractTableGateway
                 $tmp_result[$item[$field]] = $item;
             }
 
+            //Если включена нормализация
             if ((bool)$normalize) {
                 foreach ($tmp_result as $key => &$val) {
                     unset($val[$field]);
@@ -287,7 +306,7 @@ class ShopModel extends AbstractTableGateway
      */
     protected function escape($input_str)
     {
-       return addslashes($input_str);
+       return addslashes(htmlspecialchars(trim($input_str)));
     }
 
     /**

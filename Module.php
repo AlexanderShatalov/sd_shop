@@ -2,8 +2,9 @@
 namespace Shop;
 
 use Shop\Model\CurrencyModel;
-use Shop\Model\ProductsModel;
-use Shop\Model\SkusModel;
+use Shop\Model\StorageModel;
+//use Shop\Model\ProductsModel;
+//use Shop\Model\SkusModel;
 
 class Module
 {
@@ -31,6 +32,12 @@ class Module
                 'Shop\Model\CurrencyModel' => function($sm){
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new CurrencyModel($dbAdapter);
+                    return $table;
+                },
+
+                'Shop\Model\StorageModel' => function($sm){
+                    $dbAdapter = $sm->get('ZendDbAdapterAdapter');
+                    $table = new StorageModel($dbAdapter);
                     return $table;
                 },
 

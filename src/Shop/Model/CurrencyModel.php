@@ -21,7 +21,12 @@ class CurrencyModel extends ShopModel
      */
     public function getRate($currency_code)
     {
+        $sql = $this->getSql();
+        $select = $sql->select();
+        $select->columns(array('rate'))->where(array('code'=>"RUB"));
+        $result = $this->executeSelect($select);
 
+        return $result->toArray();
     }
 
 
