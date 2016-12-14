@@ -17,13 +17,25 @@ class CurrencyModel extends ShopModel
      *
      * @param string $currency_code
      *
-     * @return double
+     * @return doouble
      */
-    public function getRate($currency_code)
-    {
+    
+   
+    public function getRate($currency_code=null)
+    {   
+                  
+        $sql = $this->getSql();
+        $select = $sql->select();
+        if (is_string($currency_code)){
+            $select->columns(array('rate'))->where(array("code"=>$currency_code));
+            $result = $this->executeSelect($select);
 
+        return $result->toArray();
+        }
+        else {
+            throw new \Exception("Передан не верный параметр $currency_code");
+        }
     }
-
 
     /**
      * Конвертация цены на $rate_from/$rate_to
@@ -36,7 +48,12 @@ class CurrencyModel extends ShopModel
      */
     public function convertByRate($price, $rate_from, $rate_to)
     {
-
+        if ($rate_from == $rate_to) {
+            return $price;
+        }
+        $rate_from = (float) $rate_from;
+        $rate_to   = (float) $rate_to;
+        return ($price * $rate_from) / $rate_to;
     }
 
 
@@ -52,7 +69,30 @@ class CurrencyModel extends ShopModel
      */
     public function convertByCode($price, $code_from, $code_to)
     {
-
+        $comparison = strcasecmp($code_from, $code_to);
+        if ($comparison == 0) {
+            return $price;
+        }
+        $sql = $this->getSql();
+        $select = $sql->select();
+        
+        $select->columns(array('rate', 'code'))->where(array("code"=>array($code_from, $code_to)));
+        
+        $result = $this->executeSelect($select);
+        $result = $result->toArray();
+        if (count($result) == 2){
+        $tmp_result = array();
+            foreach ($result as $key => $value){    
+                $tmp_result[$value['code']] = $value['rate'];
+            }
+        $from = $tmp_result[$code_from];
+        $to = $tmp_result[$code_to];;
+        
+        return $this->convertByRate($price, $from, $to);
+        }
+        else {
+            return false;
+        }
     }
 
     /**
@@ -65,21 +105,51 @@ class CurrencyModel extends ShopModel
      */
     public function removeCurrency($currency_code, $convert_flag = true)
     {
-
+        
     }
 
     /**
      * Добавление валюты
      *
      * @param array|string $currency_code
-     * Если array, то, например ('code' => 'GBR', 65, 5)
+     * Если array, то, например ('code' => 'GBR', 'rate' => 65, ['sort' => 5])
      * если string, то, 'GBR'
      *
      * return bool
      */
     public function addCurrency($input_currency)
     {
-
+        $sort = null;
+        $params_query = array();
+        $count = $this->countAll();
+        if ($count > 0){
+            $tmp_result = $this->adapter->query("SELECT MAX(sort) FROM {$this->table}", Adapter::QUERY_MODE_EXECUTE);
+            $tmp_result = $tmp_result->toArray();  
+            $sort = array_pop($tmp_result[0]);
+        }
+        if (!is_array($input_currency) && is_string($input_currency)){
+            $params_query['code'] = $this->escape($input_currency);
+            $params_query['rate'] = 1;
+        }
+        elseif(is_array($input_currency)) {
+            $params_query['code'] = $this->escape($input_currency['code']);
+            if (!isset($input_currency['rate'])){
+                    $params_query['rate'] = 1;
+                }
+            else{
+                $params_query['rate'] = (double) $input_currency['rate'];
+            }    
+        }
+        
+        if (!is_null($sort)){
+            $params_query['sort'] = $sort++;
+        }
+        else {
+            $params_query['sort'] = 0;
+        }
+        //return $params_query;
+                
+        return $result = $this->insert($params_query);
     }
 
     /**
