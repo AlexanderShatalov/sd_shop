@@ -221,8 +221,9 @@ class ShopModel extends AbstractTableGateway
                 foreach ($fields as $k => $v) {
                     $order_field .= $k.' '.$order_flag.', ';
                 }
+
+                $order_field = substr($order_field, 0, strlen($order_field) - 2).' ';
             }
-            $order_field = substr($order_field, 0, strlen($order_field) - 2).' ';
 
         } else if(is_string($fields)) {
             $limit = (int)$limit;
