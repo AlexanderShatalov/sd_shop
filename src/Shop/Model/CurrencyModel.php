@@ -105,6 +105,37 @@ class CurrencyModel extends ShopModel
      */
     public function removeCurrency($currency_code, $convert_flag = true)
     {
+        $currency_code = (string) $currency_code;
+        $pc = $this->getPrimaryCurrency();
+        $temp_currency = $this->getByField("code", $currency_code);
+        $temp_currency = array_shift($temp_currency);
+        if(empty($temp_currency)){
+            throw new \Exception(
+                    "Не найдена введенная валюта: $currency_code"
+                    );
+        }
+        if ($currency_code !== $pc['code']){
+            $this->move($temp_currency['id']);
+            /*нужно сделать преобразование в зависимости от $convert_flag
+            в следующих таблицах: Products_sku, Services_variant
+            */
+        }
+        
+        elseif ($currency_code == $pc['code']){
+            
+            $new_pc = $this->adapter->query("SELECT MIN(sort) FROM {$this->table} WHERE sort > 0", Adapter::QUERY_MODE_EXECUTE);
+            $new_pc = $new_pc->toArray();
+            $new_pc = array_shift($new_pc[0]);
+            $new_pc = $this->getByField("sort", $new_pc);
+            $new_pc = array_shift($new_pc);
+            $this->changePrimaryCurrency($new_pc["code"]);
+        /*
+            обновить цены и коды валют в таблицах:
+            Orders, Services_variant, Products
+        */
+        }
+        $this->deleteByField("code", $currency_code);
+        
         
     }
 
@@ -164,14 +195,52 @@ class CurrencyModel extends ShopModel
     }
 
     /**
-     * Меняем основную валюту
+     * Устанавливаем основную валюту и конвертируем цену
      *
      * @param string $new_currency
-     * @param bool $convert_flag
+     * @throws Exception
+     * @returns bool
      */
-    public function setPrimaryCurrency($new_currency, $convert_flag = true)
+    public function changePrimaryCurrency($new_currency)
     {
-
+        $old_pc = $this->getPrimaryCurrency();
+        $new_currency = (string) $new_currency;
+        $old_pc_code = $old_pc["code"];
+        if (empty($old_pc)){
+            throw new \Exception(
+                    "Не найдена основная валюта!"
+                    );
+                    
+        }
+        elseif ($old_pc_code == $new_currency) {
+            return false;
+        }
+        $new_pc = $this->getByField(array(
+            "code" => $this->escape($new_currency),
+        ));
+        $new_pc = array_shift($new_pc);
+        
+        if(empty($new_pc)){
+             throw new \Exception(
+                    "Валюта $new_currency не найдена"
+                    );
+        }
+        $this->adapter->query("UPDATE {$this->table} SET rate = rate/{$new_pc['rate']}", Adapter::QUERY_MODE_EXECUTE);
+        
+        
+        $this->updateById($old_pc["id"], array(
+            "sort" => $new_pc["sort"]
+        ));
+        $this->updateById($new_pc["id"], array(
+            "sort" => 0
+        ));
+        
+        
+        /*
+            обновить цены и коды валют в таблицах:
+            Orders, Services_variant, Products
+        */
+        return true;
     }
 
     /**
@@ -182,7 +251,31 @@ class CurrencyModel extends ShopModel
      */
     public function changeRate($code, $rate)
     {
-
+        $code = (string) $code;
+        $rate = (int) $rate;
+        $old_pc = $this->getPrimaryCurrency();
+        if ($code == $old_pc["code"]){
+            return false;
+        }
+        $currency = $this->getByField("code", $code);
+        if(empty($currency)){
+            throw new \Exception(
+                    "Валюта не найдена"
+                    );
+        }
+        if($rate <= 0){
+            throw new \Exception(
+                    "Некорректный курс: $rate"
+                    );
+        }
+        $this->updateById(array_shift($currency)["id"], array(
+            "rate" => $rate
+        ));
+         /*
+            обновить цены и коды валют в таблицах:
+            Orders, Services_variant, Products
+        */
+        return true; 
     }
 
 

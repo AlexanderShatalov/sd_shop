@@ -11,7 +11,7 @@ class IndexController extends AbstractActionController
     {
         $cm = $this->getServiceLocator()->get("Shop\Model\CurrencyModel");
         echo "<pre>";
-        print_r($cm->move(1, 10));
+        print_r($cm->removeCurrency("RUB"));
         echo "</pre>";
        
     }
