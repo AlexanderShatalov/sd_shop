@@ -9,6 +9,10 @@ class IndexController extends AbstractActionController
 {
     public function indexAction()
     {
-
+        $cm = $this->getServiceLocator()->get("Shop\Model\CurrencyModel");
+        echo "<pre>";
+        print_r($cm->removeCurrency("RUB"));
+        echo "</pre>";
+       
     }
 }
