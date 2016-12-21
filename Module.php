@@ -1,6 +1,7 @@
 <?php
 namespace Shop;
 
+use Shop\Model\CouponModel;
 use Shop\Model\CurrencyModel;
 use Shop\Model\StorageModel;
 //use Shop\Model\ProductsModel;
@@ -29,18 +30,23 @@ class Module
     {
         return array(
             'factories' => array(
-                'Shop\Model\CurrencyModel' => function($sm){
+                'Shop\Model\CurrencyModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new CurrencyModel($dbAdapter);
                     return $table;
                 },
 
-                'Shop\Model\StorageModel' => function($sm){
+                'Shop\Model\StorageModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new StorageModel($dbAdapter);
                     return $table;
                 },
 
+                'Shop\Model\CouponModel' => function ($sm) {
+                    $dbAdapter = $sm->get('ZendDbAdapterAdapter');
+                    $table = new CouponModel($dbAdapter);
+                    return $table;
+                },
                 /*'Shop\Model\ProductsModel' => function($sm){
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new ProductsModel($dbAdapter);
