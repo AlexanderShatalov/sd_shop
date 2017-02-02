@@ -5,13 +5,17 @@ use Zend\Db\Adapter\Adapter;
 
 class CouponModel extends shopModel
 {
-    const TYPE_COUPON_PROCENT = '%';
-    const TYPE_COUPON_CURRENCY = 'RUB';
+    protected $type_coupon_procent = '%';
+    protected $type_coupon_currency = 'RUB';
 
     public function __construct(Adapter $adapter)
     {
         $this->table = 'Discount_coupon';
         parent::__construct($adapter);
+
+        $currency_model = new CurrencyModel($adapter);
+        $this->type_coupon_currency = $currency_model->getPrimaryCurrency();
+        $this->type_coupon_currency = $this->type_coupon_currency['code'];
     }
 
 
@@ -40,7 +44,7 @@ class CouponModel extends shopModel
             throw new \Exception('Некорректный формат входных данных!');
         }
 
-        $data['type'] = (isset($data['type'])) ? $data['type'] : '%';
+        $data['type'] = ($this->checkFieldType($data)) ? $data['type'] : '%';
 
         if (!$this->checkFieldType($data['type'])) {
             throw new \Exception('Не указан тип скидки');
@@ -97,7 +101,7 @@ class CouponModel extends shopModel
     public function editExpireDatetime($id, $expire_datetime)
     {
         $id = (int)$id;
-        $expire_datetime = (string)$expire_datetime;
+        $expire_datetime = $this->escape((string)$expire_datetime);
 
         return $this->updateById($id, array('expire_datetime' => $expire_datetime));
     }
@@ -135,14 +139,12 @@ class CouponModel extends shopModel
             }
         }
 
-
         /**
          * Здесь проверка на соответствие $type знаку процента,
          * или строке кода основной валюты магазина. И возврат логического
          * значения
          */
-
-        if ($type == self::TYPE_COUPON_CURRENCY || $type == self::TYPE_COUPON_PROCENT) {
+        if ($type == $this->type_coupon_currency || $type == $this->type_coupon_procent) {
             return true;
         } else {
             return false;

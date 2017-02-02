@@ -220,11 +220,10 @@ class ShopModel extends AbstractTableGateway
             if (!empty($order_flag)) {
                 foreach ($fields as $k => $v) {
                     $order_field .= $k.' '.$order_flag.', ';
+                    
                 }
-
                 $order_field = substr($order_field, 0, strlen($order_field) - 2).' ';
             }
-
         } else if(is_string($fields)) {
             $limit = (int)$limit;
             if (is_array($values)) {
@@ -312,13 +311,51 @@ class ShopModel extends AbstractTableGateway
     }
 
     /**
-     * @param string $input_str
+     * @param string|array $input_data
+     * [@param string $type]
      *
-     * @return string
+     * @return array|int|string
      */
-    protected function escape($input_str)
+    protected function escape($input_data, $type = null)
     {
-       return addslashes(htmlspecialchars(trim($input_str)));
+        if (is_array($input_data)) {
+            switch ($type) {
+                case 'int':
+                    foreach ($input_data as $key => $val) {
+                        $input_data[$key] = (int)$val;
+                    }
+                    break;
+
+                case 'like':
+                    foreach ($input_data as $key => $val) {
+                        $tmp_str = str_replace('\\', '\\\\', $val);
+                        $input_data[$key] = str_replace(array('%', '_'), array('\%', '\_'),
+                            addslashes(htmlspecialchars(trim($tmp_str))));
+                    }
+                    break;
+
+                default:
+                    foreach ($input_data as $key => $val) {
+                        $input_data[$key] = addslashes(htmlspecialchars(trim($val)));
+                    }
+                    break;
+            }
+
+            return $input_data;
+        }
+
+        switch ($type) {
+            case 'int':
+                return (int)$input_data;
+
+            case 'like':
+                $input_data = (string)$input_data;
+                return str_replace(array('%', '_'), array('\%', '\_'), addslashes(htmlspecialchars(trim($input_data))));
+
+            default:
+                $input_data = (string)$input_data;
+                return addslashes(htmlspecialchars(trim($input_data)));
+        }
     }
 
     /**
@@ -328,6 +365,7 @@ class ShopModel extends AbstractTableGateway
      */
     protected function escapeField($input_str)
     {
+        $input_str = (string)$input_str;
         return "`".$input_str."`";
     }
 

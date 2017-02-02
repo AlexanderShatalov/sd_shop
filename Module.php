@@ -4,6 +4,7 @@ namespace Shop;
 use Shop\Model\CouponModel;
 use Shop\Model\CurrencyModel;
 use Shop\Model\StorageModel;
+use Shop\Model\TaxModel;
 //use Shop\Model\ProductsModel;
 //use Shop\Model\SkusModel;
 
@@ -45,6 +46,12 @@ class Module
                 'Shop\Model\CouponModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new CouponModel($dbAdapter);
+                    return $table;
+                },
+
+                'Shop\Model\TaxModel' => function ($sm) {
+                    $dbAdapter = $sm->get('ZendDbAdapterAdapter');
+                    $table = new TaxModel($dbAdapter);
                     return $table;
                 },
                 /*'Shop\Model\ProductsModel' => function($sm){
