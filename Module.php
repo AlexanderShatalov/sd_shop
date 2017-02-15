@@ -5,6 +5,8 @@ use Shop\Model\CouponModel;
 use Shop\Model\CurrencyModel;
 use Shop\Model\StorageModel;
 use Shop\Model\TaxModel;
+use Shop\Model\TaxRegionsModel;
+
 //use Shop\Model\ProductsModel;
 //use Shop\Model\SkusModel;
 
@@ -30,30 +32,51 @@ class Module
     function getServiceConfig()
     {
         return array(
+            'aliases' => array(
+                'Shop\Model\CurrencyModel' => 'CurrencyModel',
+                'Shop\Model\StorageModel' => 'StorageModel',
+                'Shop\Model\CouponModel' => 'CouponModel',
+                'Shop\Model\TaxModel' => 'TaxModel',
+                'Shop\shopRegistry' => 'ShopRegistry',
+                'Shop\Model\TaxRegionsModel' => 'TaxRegionsModel'
+            ),
+
             'factories' => array(
-                'Shop\Model\CurrencyModel' => function ($sm) {
+                'CurrencyModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new CurrencyModel($dbAdapter);
                     return $table;
                 },
 
-                'Shop\Model\StorageModel' => function ($sm) {
+                'StorageModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new StorageModel($dbAdapter);
                     return $table;
                 },
 
-                'Shop\Model\CouponModel' => function ($sm) {
+                'CouponModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new CouponModel($dbAdapter);
                     return $table;
                 },
 
-                'Shop\Model\TaxModel' => function ($sm) {
+                'TaxModel' => function ($sm) {
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new TaxModel($dbAdapter);
                     return $table;
                 },
+
+                'ShopRegistry' => function ($sm) {
+                    $adapter = $sm->get('ZendDbAdapterAdapter');
+                    $shop_registry = shopRegistry::getInstance($adapter);
+                    return $shop_registry;
+                },
+
+                'TaxRegionsModel' => function ($sm) {
+                    $adapter = $sm->get('ZendDbAdapterAdapter');
+                    $table = new TaxRegionsModel($adapter);
+                    return $table;
+                }
                 /*'Shop\Model\ProductsModel' => function($sm){
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new ProductsModel($dbAdapter);
@@ -65,7 +88,8 @@ class Module
                     $table = new SkusModel($dbAdapter);
                     return $table;
                 }*/
-            )
+            ),
+
         );
     }
 }

@@ -19,7 +19,7 @@ class SettingsModel extends shopModel
      * Получение значения настройки
      *
      * @param string $name
-     * @return array
+     * @return array|NULL
      */
     public function get($name = 'all')
     {
