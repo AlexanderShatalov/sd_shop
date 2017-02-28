@@ -35,10 +35,9 @@ class SkusModel extends ShopModel
         $query = $query->toArray();
 
         foreach ($query as $item) {
-            if(!$this->delete($item['id'])) {
+            if(!$this->delete($item['id'], true)) {
                 throw new \Exception('Ошибка удаления вариации '.$item['id']);
             }
-
         }
 
         return true;
@@ -51,7 +50,7 @@ class SkusModel extends ShopModel
      * @param int $input_id
      * @return bool
      */
-    public function delete($input_id)
+    public function delete($input_id, $drop_flag = false)
     {
         $input_id = (int)$input_id;
 
@@ -64,7 +63,7 @@ class SkusModel extends ShopModel
         $sku = array_shift($sku);
 
         $product = $this->adapter->query('SELECT * FROM Products WHERE id = '.
-            (int)$sku['Products_id'], Adapter::QUERY_MODE_EXECUTE);
+            (int)$sku['products_id'], Adapter::QUERY_MODE_EXECUTE);
         $product = $product->toArray();
         $product = array_shift($product);
 
@@ -75,12 +74,19 @@ class SkusModel extends ShopModel
             $this->deleteById($sku['id']);
         }
 
-        $other_skus = $this->getOtherSkusList($sku['Products_id'], $input_id);
+        $other_skus = $this->getOtherSkusList($sku['products_id'], $input_id);
 
         //Если у товара только одна вариация, то мы не
         //должны её удалять
         if (empty($other_skus)) {
-            return true;
+            if (!$drop_flag) {
+                return true;
+            } else {
+                $this->deleteFromStockInfo($input_id);
+                $this->deleteFromFeaturesInfo($input_id);
+                return (bool)$this->deleteById($input_id);
+            }
+
         }
 
         $update = array(
@@ -250,7 +256,8 @@ class SkusModel extends ShopModel
         $result = array();
 
         $query = $this->adapter->query("SELECT id, price, currency, count FROM {$this->table}
-        WHERE Products_id = {$product_id} AND id <>  {$sku_id} AND available = 1", Adapter::QUERY_MODE_EXECUTE);
+                                  WHERE products_id = {$product_id} AND id != {$sku_id}
+                                  AND available = 1", Adapter::QUERY_MODE_EXECUTE);
 
         $query = $query->toArray();
 
