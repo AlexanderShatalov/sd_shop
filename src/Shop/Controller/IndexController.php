@@ -2,17 +2,31 @@
 
 namespace Shop\Controller;
 
-use Shop\shopRegistry;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Shop\Model;
-use Zend\Db\Adapter\Adapter;
 
 class IndexController extends AbstractActionController
 {
 
     public function indexAction()
     {
+        $sm = $this->getServiceLocator()->get('SkusModel');
 
+        $input_data = array(
+            'sku' => 'TEST',
+            'name' => 'TEST',
+            'products_id' => 1,
+            'available' => 1
+        );
+        //$sm->deleteByProducts(array(1));
+        echo '<pre>';
+            print_r($sm->addSku($input_data));
+        echo '</pre>';
+
+
+        /*echo '<pre>';
+            print_r($sm->getAll('id', true));
+        echo '</pre>';*/
     }
 }

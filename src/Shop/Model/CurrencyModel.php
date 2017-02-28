@@ -4,7 +4,7 @@ namespace Shop\Model;
 
 use Zend\Db\Adapter\Adapter;
 
-class CurrencyModel extends ShopModel
+class CurrencyModel extends SortableModel
 {
     public function __construct(Adapter $adapter)
     {
@@ -19,9 +19,7 @@ class CurrencyModel extends ShopModel
      *
      * @return double
      */
-    
-   
-    public function getRate($currency_code=null)
+    public function getRate($currency_code = null)
     {   
                   
         $sql = $this->getSql();
@@ -276,74 +274,6 @@ class CurrencyModel extends ShopModel
             Orders, Services_variant, Products
         */
         return true; 
-    }
-
-
-    /**
-     * Изменяет порядок сортировки
-     *
-     * @param string $id
-     * @param null|string $before_id
-     *
-     * return bool
-     */
-    public function move($id, $before_id = null)
-    {
-        
-        $id = (int)$id;
-        //$exists = $this->exists($id);
-        $result = true;
-/*
-        if (!$exists) {
-            return false;
-        }
-*/
-        if (!$before_id) {
-            $sort = $this->adapter->query('SELECT id,sort FROM Currency WHERE sort = (SELECT MAX(sort) FROM Currency)', Adapter::QUERY_MODE_EXECUTE);
-            $sort = $sort->toArray();
-            $max_id = array_shift($sort[0]);
-
-            if ($id != $max_id) {
-                $sort = array_shift($sort[0]);
-                $this->updateById($id, array('sort'=>$sort));
-                $result = $this->adapter->query("UPDATE Currency SET sort = sort - 1 WHERE sort > 1 AND sort <= $sort AND id <> $id", Adapter::QUERY_MODE_EXECUTE);
-            }
-        } else {
-            $before_id = (int)$before_id;
-
-            $sort = $this->adapter->query("SELECT id, sort FROM Currency WHERE id in ($id, $before_id)", Adapter::QUERY_MODE_EXECUTE);
-            $sort = $sort->toArray();
-
-            if (empty($sort) || count($sort) != 2) {
-                return false;
-            }
-
-            foreach ($sort as $key => $val) {
-                if ($val['id'] == $before_id) {
-                    $new_sort = $val['sort'];
-                    break;
-                }
-            }
-
-            foreach ($sort as $key => $val) {
-                if ($val['id'] == $id) {
-                    $target_sort = $val['sort'];
-                    break;
-                }
-            }
-
-            $this->updateById($id, array('sort' => $new_sort));
-
-            if ($target_sort > $new_sort) {
-                $this->adapter->query("UPDATE Currency SET sort = sort + 1 WHERE  sort >= $new_sort AND id <> $id AND sort < $target_sort" , Adapter::QUERY_MODE_EXECUTE);
-            } else if ($target_sort < $new_sort) {
-                $this->adapter->query("UPDATE Currency SET sort = sort + 1 WHERE  sort >= $new_sort AND id <> $id" , Adapter::QUERY_MODE_EXECUTE);
-                $this->adapter->query("UPDATE Currency SET sort = sort - 1 WHERE sort > $target_sort", Adapter::QUERY_MODE_EXECUTE);
-            }
-        }
-        return !empty($result);
-
-         
     }
 
     /**

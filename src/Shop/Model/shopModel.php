@@ -12,7 +12,7 @@ class ShopModel extends AbstractTableGateway
     {
         $this->adapter = $adapter;
         $this->initialize();
-
+        $this->setColumns();
     }
 
 
@@ -122,15 +122,18 @@ class ShopModel extends AbstractTableGateway
     {
         $sql = $this->getSql();
         $select = $sql->select();
+        $columns = $this->getColumns();
 
-        //Если задан вариант сортировки
-        if ( $sort_flag == 'ASC' ||$sort_flag == 'DESC' ) {
-            $select->order('sort '.$sort_flag);
+        //Если задан вариант сортировки и поле
+        if (!empty($field) && in_array($field, $columns)) {
+            $sort_flag = ($sort_flag == 'ASC' || $sort_flag == 'DESC') ? $sort_flag : 'ASC';
+            $select->order($field.' '.$sort_flag);
         }
 
         $result = $this->executeSelect($select)->toArray();
 
         $tmp_item = $result[0];
+
         $keys_list = array_keys($tmp_item);
 
         if (!empty($field) && in_array($field, $keys_list) !== false) {
@@ -369,4 +372,20 @@ class ShopModel extends AbstractTableGateway
         return "`".$input_str."`";
     }
 
+    /**
+     * Устанавливаем список полей таблицы
+     */
+    private function setColumns(){
+        $result = array();
+        $query = $this->adapter->query('DESC '.$this->table, Adapter::QUERY_MODE_EXECUTE);
+        $query = $query->toArray();
+
+        if (!empty($query)) {
+            foreach ($query as $key => $item) {
+                $result[] = $item['Field'];
+            }
+        }
+
+        $this->columns = $result;
+    }
 }

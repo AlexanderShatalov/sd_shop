@@ -8,7 +8,7 @@ use Shop\Model\TaxModel;
 use Shop\Model\TaxRegionsModel;
 
 //use Shop\Model\ProductsModel;
-//use Shop\Model\SkusModel;
+use Shop\Model\SkusModel;
 
 class Module
 {
@@ -38,7 +38,8 @@ class Module
                 'Shop\Model\CouponModel' => 'CouponModel',
                 'Shop\Model\TaxModel' => 'TaxModel',
                 'Shop\shopRegistry' => 'ShopRegistry',
-                'Shop\Model\TaxRegionsModel' => 'TaxRegionsModel'
+                'Shop\Model\TaxRegionsModel' => 'TaxRegionsModel',
+                'Shop\Model\SkusModel' => 'SkusModel',
             ),
 
             'factories' => array(
@@ -76,18 +77,18 @@ class Module
                     $adapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new TaxRegionsModel($adapter);
                     return $table;
-                }
+                },
                 /*'Shop\Model\ProductsModel' => function($sm){
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new ProductsModel($dbAdapter);
                     return $table;
-                },
+                },*/
 
-                'Shop\Model\SkusModel' => function($sm){
+                'SkusModel' => function($sm){
                     $dbAdapter = $sm->get('ZendDbAdapterAdapter');
                     $table = new SkusModel($dbAdapter);
                     return $table;
-                }*/
+                }
             ),
 
         );

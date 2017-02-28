@@ -4,7 +4,7 @@ namespace Shop\Model;
 
 use Zend\Db\Adapter\Adapter;
 
-class StorageModel extends ShopModel
+class StorageModel extends SortableModel
 {
     const CRITICAL_NUMBER = 2;
 
@@ -12,69 +12,6 @@ class StorageModel extends ShopModel
     {
         $this->table = 'Storage';
         parent::__construct($adapter);
-    }
-
-    /**
-     * Изменение сортировочного коэффициента
-     *
-     * @param int $id
-     * @param int|null $before_id
-     * @return bool
-     */
-    public function move($id, $before_id = null)
-    {
-        $id = (int)$id;
-        $exists = $this->exists($id);
-        $result = true;
-
-        if (!$exists) {
-            return false;
-        }
-
-        if (!$before_id) {
-            $sort = $this->adapter->query('SELECT id,sort FROM Storage WHERE sort = (SELECT MAX(sort) FROM Storage)', Adapter::QUERY_MODE_EXECUTE);
-            $sort = $sort->toArray();
-            $max_id = array_shift($sort[0]);
-
-            if ($id != $max_id) {
-                $sort = array_shift($sort[0]);
-                $this->updateById($id, array('sort'=>$sort));
-                $result = $this->adapter->query("UPDATE Storage SET sort = sort - 1 WHERE sort > 1 AND sort <= $sort AND id <> $id", Adapter::QUERY_MODE_EXECUTE);
-            }
-        } else {
-            $before_id = (int)$before_id;
-
-            $sort = $this->adapter->query("SELECT id, sort FROM Storage WHERE id in ($id, $before_id)", Adapter::QUERY_MODE_EXECUTE);
-            $sort = $sort->toArray();
-
-            if (empty($sort) || count($sort) != 2) {
-                return false;
-            }
-
-            foreach ($sort as $key => $val) {
-                if ($val['id'] == $before_id) {
-                    $new_sort = $val['sort'];
-                    break;
-                }
-            }
-
-            foreach ($sort as $key => $val) {
-                if ($val['id'] == $id) {
-                    $target_sort = $val['sort'];
-                    break;
-                }
-            }
-
-            $this->updateById($id, array('sort' => $new_sort));
-
-            if ($target_sort > $new_sort) {
-                $this->adapter->query("UPDATE Storage SET sort = sort + 1 WHERE  sort >= $new_sort AND id <> $id" , Adapter::QUERY_MODE_EXECUTE);
-            } else if ($target_sort < $new_sort) {
-                $this->adapter->query("UPDATE Storage SET sort = sort + 1 WHERE  sort >= $new_sort AND id <> $id" , Adapter::QUERY_MODE_EXECUTE);
-                $this->adapter->query("UPDATE Storage SET sort = sort - 1 WHERE sort > $target_sort AND sort < $new_sort", Adapter::QUERY_MODE_EXECUTE);
-            }
-        }
-        return !empty($result);
     }
 
     /**
